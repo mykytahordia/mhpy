@@ -1,0 +1,15 @@
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 150
+src = ["src"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+
+[tool.ruff.lint.isort]
+known-first-party = ["{{PACKAGE_NAME}}"]
+force-single-line = true
+force-sort-within-sections = true

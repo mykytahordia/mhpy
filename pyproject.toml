@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mhpy"
+version = "0.1.0"
+description = "Lib for scaffolding ML projects and common utils."
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "hydra-core>=1.3.2",
+    "loguru>=0.7.3",
+]
+
+[project.scripts]
+mhpy = "mhpy.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 150
+src = ["src"]
+
+[tool.ruff.lint]
+extend-select = ["I"]
+
+
+[tool.ruff.lint.isort]
+known-first-party = ["mhpy"]
+force-single-line = true
+force-sort-within-sections = true
