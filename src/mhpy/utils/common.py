@@ -1,8 +1,23 @@
+import os
 from pathlib import Path
+import random
 import sys
 
 import hydra
 from loguru import logger
+import numpy as np
+import torch
+
+
+def set_seed(seed: int = 2048) -> None:
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+    torch.backends.cudnn.deterministic = True
+    torch.backends.cudnn.benchmark = False
+    os.environ["PYTHONHASHSEED"] = str(seed)
 
 
 def configure_logger(save_logs: bool = True) -> None:
