@@ -11,6 +11,7 @@ TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
 PYTHON_SUBMODULES = ["data", "train", "models", "utils"]
 MHPY_URL = "https://github.com/NikitaGordia/mhpy.git"
 UV_TIMEOUT = 100000
+PYTHON_VERSION = "3.12"
 UV_PACKAGES = [
     "dvc",
     "ruff",
@@ -102,7 +103,8 @@ def _git(project_root: Path, remote_url: str) -> None:
 
 def _uv(project_root: Path, package_root: Path, package_name: str) -> None:
     logger.info("Setting up Python environment with uv...")
-    run_cmd("uv init", "Failed to initialize uv")
+    run_cmd(f"uv init --bare --python={PYTHON_VERSION}", "Failed to initialize uv")
+    run_cmd(f"uv python pin {PYTHON_VERSION}", f"Failed to pin python version: {PYTHON_VERSION}")
 
     for dir in PYTHON_SUBMODULES:
         submodule = package_root / dir
