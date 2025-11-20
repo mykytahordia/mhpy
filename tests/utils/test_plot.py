@@ -59,7 +59,7 @@ class TestPlotLRFinder:
             losses = [3.0, 2.8, 2.5, 2.0, 1.5, 2.0]
             warmup = 2
 
-            result = plot_lr_finder(lrs, losses, tmpdir, warmup)
+            _ = plot_lr_finder(lrs, losses, tmpdir, warmup)
 
             mock_plt.axvline.assert_called_once()
 
@@ -89,7 +89,7 @@ class TestPlotLRFinder:
             mock_gradient_array.argmin.return_value = 2
             mock_gradient.return_value = mock_gradient_array
 
-            result = plot_lr_finder(lrs, losses, tmpdir, warmup)
+            _ = plot_lr_finder(lrs, losses, tmpdir, warmup)
 
             mock_gradient.assert_called_once()
             call_args = mock_gradient.call_args[0][0]

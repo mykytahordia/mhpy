@@ -32,10 +32,11 @@ def _assert_no_code_leakage(package_name: str) -> None:
             logger.info("Try again...")
 
 
-def _prompting(package_game: str) -> dict:
-    _assert_no_code_leakage(package_game)
+def _prompting(package_game: str, cfg: DictConfig) -> dict:
+    if cfg.run.code_privacy_confirmation:
+        _assert_no_code_leakage(package_game)
 
-    remote_url = input("🔗 Enter remote repository URL (Enter to skip): ").strip()
+    remote_url = input("🔗 Enter remote repository URL (Enter to skip): ").strip() if cfg.run.remote_url_prompt else None
 
     return {"remote_url": remote_url}
 
@@ -43,27 +44,27 @@ def _prompting(package_game: str) -> dict:
 def _git(project_root: Path, remote_url: str) -> None:
     logger.info("Initializing Git...")
     if not (project_root / ".git").exists():
-        run_cmd("git init", "Failed to initialize git")
-        run_cmd("git branch -M main", "Failed to create main branch")
+        run_cmd(["git", "init"], "Failed to initialize git")
+        run_cmd(["git", "branch", "-M", "main"], "Failed to create main branch")
     else:
         logger.info("Git repository already exists.")
 
     create_file_from_template(project_root / ".gitignore", "gitignore.tpl")
-    run_cmd("git add .gitignore", "Failed to add .gitignore")
-    run_cmd('git commit -m "Initial commit: Add .gitignore"', "Failed to commit .gitignore")
+    run_cmd(["git", "add", ".gitignore"], "Failed to add .gitignore")
+    run_cmd(["git", "commit", "-m", "Initial commit: Add .gitignore"], "Failed to commit .gitignore")
 
     if remote_url:
-        run_cmd(f"git remote add origin {remote_url}", "Failed to add remote origin")
+        run_cmd(["git", "remote", "add", "origin", remote_url], "Failed to add remote origin")
         logger.info(f"✅ Remote 'origin' set to {remote_url}")
-        run_cmd("git push -u origin main", f"Failed to push to origin/main {remote_url}")
+        run_cmd(["git", "push", "-u", "origin", "main"], f"Failed to push to origin/main {remote_url}")
     else:
         logger.info("Skipping remote configuration.")
 
 
 def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConfig) -> None:
     logger.info("Setting up Python environment with uv...")
-    run_cmd(f"uv init --bare --python={cfg.python_version}", "Failed to initialize uv")
-    run_cmd(f"uv python pin {cfg.python_version}", f"Failed to pin python version: {cfg.python_version}")
+    run_cmd(["uv", "init", "--bare", f"--python={cfg.python_version}"], "Failed to initialize uv")
+    run_cmd(["uv", "python", "pin", cfg.python_version], f"Failed to pin python version: {cfg.python_version}")
 
     for dir in cfg.python_submodules:
         submodule = package_root / dir
@@ -80,29 +81,29 @@ def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConf
         f.write(pyproject_append_content)
     logger.info("Updated: pyproject.toml")
 
-    packages = f"dvc pre-commit {' '.join(cfg.uv.packages)}"
     run_cmd(
-        f"export UV_HTTP_TIMEOUT={cfg.uv.timeout} && uv add {packages}",
+        ["uv", "add"] + cfg.uv.packages,
         "Failed to install Python packages",
+        env={"UV_HTTP_TIMEOUT": str(cfg.uv.timeout)},
     )
-    run_cmd(f"uv add {cfg.mhpy_url}", "Failed at adding mhpy library as python package")
+    run_cmd(["uv", "add", cfg.mhpy_url], "Failed at adding mhpy library as python package")
 
-    run_cmd("uv pip install -e .", "Failed to install project in editable mode")
+    run_cmd(["uv", "pip", "install", "-e", "."], "Failed to install project in editable mode")
     logger.info("✅ Virtual environment created and project installed.")
     logger.info("Run 'source .venv/bin/activate' to activate it.")
 
 
 def _dvc(project_root: Path, cfg: DictConfig) -> None:
     logger.info("Initializing DVC...")
-    run_cmd("dvc init", "Failed to initialize DVC")
-    run_cmd("dvc config core.autostage true", "Failed to set DVC autostage")
+    run_cmd(["dvc", "init"], "Failed to initialize DVC")
+    run_cmd(["dvc", "config", "core.autostage", "true"], "Failed to set DVC autostage")
 
     for state in cfg.data_states:
         (project_root / "data" / state).mkdir(parents=True, exist_ok=True)
     (project_root / ".local_dvc_storage").mkdir(exist_ok=True)
 
-    run_cmd("dvc remote add local ./.local_dvc_storage", "Failed to add DVC local remote")
-    run_cmd("dvc remote default local", "Failed to set DVC default remote")
+    run_cmd(["dvc", "remote", "add", "local", "./.local_dvc_storage"], "Failed to add DVC local remote")
+    run_cmd(["dvc", "remote", "default", "local"], "Failed to set DVC default remote")
     logger.info("DVC initialized with a local remote.")
 
 
@@ -117,7 +118,7 @@ def _wandb(project_root: Path) -> None:
 def _pre_commit(project_root: Path) -> None:
     logger.info("Setting up pre-commit hooks...")
     create_file_from_template(project_root / ".pre-commit-config.yaml", "pre-commit.tpl")
-    run_cmd("pre-commit install", "Failed to install pre-commit hooks")
+    run_cmd(["pre-commit", "install"], "Failed to install pre-commit hooks")
 
 
 def _makefile(project_root: Path, package_name: str) -> None:
@@ -158,9 +159,9 @@ def _py_templates(package_root: Path, package_name: str) -> None:
 
 def _final_commit() -> None:
     logger.info("Finalizing project setup...")
-    run_cmd("git add .", "Failed to add all new files to git")
+    run_cmd(["git", "add", "."], "Failed to add all new files to git")
     run_cmd(
-        'git commit -m "feat: Initial project setup from mhpy template"',
+        ["git", "commit", "-m", "feat: Initial project setup from mhpy template"],
         "Failed to create final commit",
     )
 
@@ -178,7 +179,7 @@ def init(cfg: DictConfig) -> None:
     project_root = Path.cwd()
     package_root = project_root / "src" / package_name
 
-    info = _prompting(package_name)
+    info = _prompting(package_name, cfg)
 
     logger.info(f"🚀 Starting new ML project '{package_name}'...")
     _git(project_root, info["remote_url"])

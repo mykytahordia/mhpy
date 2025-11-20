@@ -1,0 +1,7 @@
+defaults:
+  - init
+  - _self_
+
+run:
+  code_privacy_confirmation: false
+  remote_url_prompt: false

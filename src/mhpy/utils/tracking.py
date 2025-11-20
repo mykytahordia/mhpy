@@ -60,7 +60,7 @@ def _path_is_relative(path: Path, parents: list[Path]):
     return any([path.is_relative_to(parent) for parent in parents])
 
 
-def assert_clean_git(repo_path=".", project_name="my_project", ignore_submodules=["config"]):
+def assert_clean_git(project_name: str, repo_path: str = ".", ignore_submodules: list[str] = ["conf"]) -> None:
     ignore_paths = [Path(f"src/{project_name}/{submodule}") for submodule in ignore_submodules]
 
     try:

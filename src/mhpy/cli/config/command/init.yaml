@@ -4,6 +4,11 @@ python_version: "3.12"
 
 name: init
 
+run:
+  code_privacy_confirmation: true
+  remote_url_prompt: true
+
+
 python_submodules:
   - data
   - train
@@ -33,7 +38,8 @@ uv:
     - pytest
     - pytest-cov
 
-mhpy_url: "https://github.com/NikitaGordia/mhpy.git"
+mhpy_url: mhpy[ml] @ git+https://github.com/NikitaGordia/mhpy.git
+
 
 data_states:
   - raw

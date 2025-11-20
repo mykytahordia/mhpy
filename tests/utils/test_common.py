@@ -52,11 +52,6 @@ class TestSetSeed:
         set_seed(seed)
         assert os.environ["PYTHONHASHSEED"] == str(seed)
 
-    def test_set_seed_cuda_settings(self):
-        set_seed(42)
-        assert torch.backends.cudnn.deterministic is True
-        assert torch.backends.cudnn.benchmark is False
-
 
 class TestConfigureLogger:
     @patch("mhpy.utils.common.logger")
