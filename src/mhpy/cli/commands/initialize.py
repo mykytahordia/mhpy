@@ -2,19 +2,20 @@ from pathlib import Path
 import shutil
 import uuid
 
+from jinja2 import Environment
+from jinja2 import FileSystemLoader
+from jinja2 import StrictUndefined
 from loguru import logger
 from omegaconf import DictConfig
 
 from mhpy.utils.subprocess import run_cmd
 
 TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
+jinja_env = Environment(loader=FileSystemLoader(TEMPLATE_DIR), undefined=StrictUndefined, keep_trailing_newline=True)
 
 
-def create_file_from_template(filepath: Path, template_name: str, replacements: dict | None = None) -> None:
-    content = (TEMPLATE_DIR / template_name).read_text()
-    if replacements:
-        for key, value in replacements.items():
-            content = content.replace(f"{{{{{key}}}}}", value)
+def create_file_from_template(filepath: Path, template_name: str, replacements: dict = {}) -> None:
+    content = jinja_env.get_template(template_name).render(**replacements)
 
     filepath.parent.mkdir(parents=True, exist_ok=True)
     filepath.write_text(content)
@@ -50,7 +51,7 @@ def _git(project_root: Path, remote_url: str) -> None:
     else:
         logger.info("Git repository already exists.")
 
-    create_file_from_template(project_root / ".gitignore", "gitignore.tpl")
+    create_file_from_template(project_root / ".gitignore", "gitignore.jinja")
     run_cmd(["git", "add", ".gitignore"], "Failed to add .gitignore")
     run_cmd(["git", "commit", "-m", "Initial commit: Add .gitignore"], "Failed to commit .gitignore")
 
@@ -75,7 +76,7 @@ def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConf
     (package_root / "__init__.py").touch()
     logger.info(f"Created src structure at: {project_root / 'src'}")
 
-    pyproject_append_content = (TEMPLATE_DIR / "pyproject_append.tpl").read_text()
+    pyproject_append_content = (TEMPLATE_DIR / "pyproject_append.toml.jinja").read_text()
     pyproject_append_content = pyproject_append_content.replace("{{PACKAGE_NAME}}", package_name)
     with (project_root / "pyproject.toml").open("a") as f:
         f.write("")
@@ -118,19 +119,19 @@ def _wandb(project_root: Path) -> None:
 
 def _pre_commit(project_root: Path) -> None:
     logger.info("Setting up pre-commit hooks...")
-    create_file_from_template(project_root / ".pre-commit-config.yaml", "pre-commit.tpl")
+    create_file_from_template(project_root / ".pre-commit-config.yaml", "pre-commit.yaml.jinja")
     run_cmd(["pre-commit", "install"], "Failed to install pre-commit hooks")
 
 
 def _makefile(project_root: Path, package_name: str) -> None:
     logger.info("Creating Makefile...")
-    create_file_from_template(project_root / "Makefile", "Makefile.tpl", {"PACKAGE_NAME": package_name})
+    create_file_from_template(project_root / "Makefile", "Makefile.jinja", {"PACKAGE_NAME": package_name})
 
 
 def _hydra_configs(package_root: Path, cfg: DictConfig) -> None:
     logger.info("Creating default hydra configs...")
     hydra_dir = package_root / cfg.hydra.submodule
-    create_file_from_template(hydra_dir / "config.yaml", "hydra_config.tpl")
+    create_file_from_template(hydra_dir / "config.yaml", "hydra_config.yaml.jinja")
     for dir in cfg.hydra.configs:
         (hydra_dir / dir).mkdir(exist_ok=True)
         (hydra_dir / dir / "default.yaml").touch()
@@ -138,7 +139,7 @@ def _hydra_configs(package_root: Path, cfg: DictConfig) -> None:
 
 def _tests(project_root: Path) -> None:
     logger.info("Creating tests...")
-    create_file_from_template(project_root / "pytest.ini", "pytest.tpl")
+    create_file_from_template(project_root / "pytest.ini", "pytest.ini.jinja")
     tests_dir = project_root / "tests"
     tests_dir.mkdir(exist_ok=True, parents=True)
     (tests_dir / "__init__.py").touch()
@@ -153,7 +154,7 @@ def _other_dirs(project_root: Path, cfg: DictConfig) -> None:
 def _py_templates(package_root: Path, package_name: str) -> None:
     create_file_from_template(
         package_root / "train" / "train.py",
-        "train.tpl",
+        "train.py.jinja",
         {"PACKAGE_NAME": package_name},
     )
 
