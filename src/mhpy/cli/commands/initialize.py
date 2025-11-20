@@ -189,6 +189,10 @@ def init(cfg: DictConfig) -> None:
     project_root = Path.cwd()
     package_root = project_root / "src" / package_name
 
+    if any(project_root.iterdir()):
+        logger.error(f"Directory {project_root} is not empty. Aborting init to prevent data loss.")
+        return
+
     info = _prompting(package_name, cfg)
 
     logger.info(f"🚀 Starting new ML project '{package_name}'...")
