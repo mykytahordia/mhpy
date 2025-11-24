@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 import shutil
 import uuid
@@ -72,6 +73,7 @@ def _git(project_root: Path, remote_url: str) -> None:
 def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConfig) -> None:
     logger.info("Setting up Python environment with uv...")
     run_cmd(["uv", "init", "--bare", f"--python={cfg.python_version}"], "Failed to initialize uv")
+    os.environ["VIRTUAL_ENV"] = str(project_root / ".venv")
     run_cmd(["uv", "python", "pin", cfg.python_version], f"Failed to pin python version: {cfg.python_version}")
 
     for dir in cfg.python_submodules:
@@ -99,20 +101,20 @@ def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConf
 
 def _dvc(project_root: Path, cfg: DictConfig) -> None:
     logger.info("Initializing DVC...")
-    run_cmd(["dvc", "init"], "Failed to initialize DVC")
-    run_cmd(["dvc", "config", "core.autostage", "true"], "Failed to set DVC autostage")
+    run_cmd(["uv", "run", "dvc", "init"], "Failed to initialize DVC")
+    run_cmd(["uv", "run", "dvc", "config", "core.autostage", "true"], "Failed to set DVC autostage")
 
     for state in cfg.data_states:
         (project_root / "data" / state).mkdir(parents=True, exist_ok=True)
     (project_root / ".local_dvc_storage").mkdir(exist_ok=True)
 
-    run_cmd(["dvc", "remote", "add", "local", "./.local_dvc_storage"], "Failed to add DVC local remote")
-    run_cmd(["dvc", "remote", "default", "local"], "Failed to set DVC default remote")
+    run_cmd(["uv", "run", "dvc", "remote", "add", "local", "./.local_dvc_storage"], "Failed to add DVC local remote")
+    run_cmd(["uv", "run", "dvc", "remote", "default", "local"], "Failed to set DVC default remote")
     logger.info("DVC initialized with a local remote.")
 
 
 def _wandb(project_root: Path) -> None:
-    logger.info("Setting up W&B...")
+    logger.info("Setting up W&B folders...")
     (project_root / "models").mkdir(exist_ok=True)
     (project_root / "reports").mkdir(exist_ok=True)
     logger.info("Created 'models' and 'reports' directories.")
@@ -122,12 +124,12 @@ def _wandb(project_root: Path) -> None:
 def _pre_commit(project_root: Path) -> None:
     logger.info("Setting up pre-commit hooks...")
     create_file_from_template(project_root / ".pre-commit-config.yaml", "pre-commit.yaml.jinja")
-    run_cmd(["pre-commit", "install"], "Failed to install pre-commit hooks")
+    run_cmd(["uv", "run", "pre-commit", "install"], "Failed to install pre-commit hooks")
 
 
-def _makefile(project_root: Path, package_name: str) -> None:
+def _makefile(project_root: Path, package_name: str, hydra_submodule: str) -> None:
     logger.info("Creating Makefile...")
-    create_file_from_template(project_root / "Makefile", "Makefile.jinja", {"PACKAGE_NAME": package_name})
+    create_file_from_template(project_root / "Makefile", "Makefile.jinja", {"PACKAGE_NAME": package_name, "HYDRA_SUBMODULE": hydra_submodule})
 
 
 def _hydra_configs(package_root: Path, cfg: DictConfig) -> None:
@@ -155,10 +157,15 @@ def _other_dirs(project_root: Path, cfg: DictConfig) -> None:
 
 def _py_templates(package_root: Path, package_name: str) -> None:
     create_file_from_template(
-        package_root / "train" / "train.py",
+        package_root / "train.py",
         "train.py.jinja",
         {"PACKAGE_NAME": package_name},
     )
+
+
+def _ipynb_templates(project_root: Path, cfg: DictConfig) -> None:
+    if "notebooks" in cfg.other_dirs:
+        create_file_from_template(project_root / "notebooks" / "EDA.ipynb", "EDA.ipynb.jinja")
 
 
 def _final_commit() -> None:
@@ -205,14 +212,16 @@ def init(cfg: DictConfig) -> None:
         _dvc(project_root, cfg)
         _wandb(project_root)
         _pre_commit(project_root)
-        _makefile(project_root, package_name)
+        _makefile(project_root, package_name, cfg.hydra.submodule)
         _hydra_configs(package_root, cfg)
         _tests(project_root)
         _other_dirs(project_root, cfg)
         _py_templates(package_root, package_name)
+        _ipynb_templates(project_root, cfg)
         _final_commit()
         _print_summary()
     except Exception as e:
         logger.error(f"Error: {e}")
-        _cleanup(project_root)
-        logger.info(f"All changes in {project_root} have been removed.")
+        if not cfg.debug:
+            _cleanup(project_root)
+            logger.info(f"All changes in {project_root} have been removed.")

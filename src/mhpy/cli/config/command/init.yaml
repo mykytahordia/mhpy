@@ -11,7 +11,6 @@ run:
 
 python_submodules:
   - data
-  - train
   - models
   - utils
 
@@ -47,7 +46,7 @@ data_states:
   - processed
 
 hydra:
-  submodule: conf
+  submodule: config
   configs:
     - model
     - train
@@ -58,4 +57,6 @@ hydra:
 other_dirs:
   - notebooks
   - scripts
+
+debug: false
 
