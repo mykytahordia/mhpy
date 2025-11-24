@@ -1,11 +1,11 @@
 VENV_PYTHON = .venv/bin/python
-CONFIG_DIR ?= src/{{PACKAGE_NAME}}/config
+CONFIG_DIR ?= src/{{PACKAGE_NAME}}/{{HYDRA_SUBMODULE}}
 HYDRA ?=
 
 .PHONY: train
 
 train: 
-	$(VENV_PYTHON) -m {{PACKAGE_NAME}} --config-dir $(CONFIG_DIR) $(HYDRA)
+	$(VENV_PYTHON) -m {{PACKAGE_NAME}}.train --config-dir $(CONFIG_DIR) $(HYDRA)
 
 clean:
 	rm -rf __pycache__ .pytest_cache dist build *.egg-info

@@ -223,12 +223,12 @@ class TestAssertCleanGit:
         mock_repo = MagicMock()
 
         mock_diff_item = MagicMock()
-        mock_diff_item.a_path = "src/test_project/conf/experiment.yaml"
+        mock_diff_item.a_path = "src/test_project/config/experiment.yaml"
         mock_repo.index.diff.return_value = [mock_diff_item]
         mock_repo.untracked_files = []
         mock_repo_class.return_value = mock_repo
 
-        assert_clean_git("test_project", repo_path=".")
+        assert_clean_git("test_project", repo_path=".", ignore_submodules=["config"])
 
     @patch("mhpy.utils.tracking.git.Repo")
     def test_assert_clean_git_untracked_files(self, mock_repo_class):
@@ -244,10 +244,10 @@ class TestAssertCleanGit:
     def test_assert_clean_git_untracked_config_allowed(self, mock_repo_class):
         mock_repo = MagicMock()
         mock_repo.index.diff.return_value = []
-        mock_repo.untracked_files = ["src/test_project/conf/new_config.yaml"]
+        mock_repo.untracked_files = ["src/test_project/config/new_config.yaml"]
         mock_repo_class.return_value = mock_repo
 
-        assert_clean_git("test_project", repo_path=".")
+        assert_clean_git("test_project", repo_path=".", ignore_submodules=["config"])
 
     @patch("mhpy.utils.tracking.logger")
     @patch("mhpy.utils.tracking.git.Repo")
