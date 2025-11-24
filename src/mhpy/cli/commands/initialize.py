@@ -22,6 +22,12 @@ def create_file_from_template(filepath: Path, template_name: str, replacements: 
     logger.info(f"Created: {filepath}")
 
 
+def append_template_to_file(filepath: Path, template_name: str, replacements: dict = {}) -> None:
+    content = jinja_env.get_template(template_name).render(**replacements)
+    with filepath.open("a") as f:
+        f.write(content)
+
+
 def _assert_no_code_leakage(package_name: str) -> None:
     while True:
         confirmation_code = f"{package_name}_{str(uuid.uuid4())[:4]}"
@@ -76,11 +82,7 @@ def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConf
     (package_root / "__init__.py").touch()
     logger.info(f"Created src structure at: {project_root / 'src'}")
 
-    pyproject_append_content = (TEMPLATE_DIR / "pyproject_append.toml.jinja").read_text()
-    pyproject_append_content = pyproject_append_content.replace("{{PACKAGE_NAME}}", package_name)
-    with (project_root / "pyproject.toml").open("a") as f:
-        f.write("")
-        f.write(pyproject_append_content)
+    append_template_to_file(project_root / "pyproject.toml", "pyproject_append.toml.jinja", {"PACKAGE_NAME": package_name})
     logger.info("Updated: pyproject.toml")
 
     run_cmd(
