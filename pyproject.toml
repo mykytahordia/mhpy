@@ -38,6 +38,9 @@ mhpy = "mhpy.cli.main:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools]
+include-package-data = true
+
 [tool.ruff]
 line-length = 150
 src = ["src"]

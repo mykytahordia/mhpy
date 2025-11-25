@@ -4,15 +4,14 @@ import shutil
 import uuid
 
 from jinja2 import Environment
-from jinja2 import FileSystemLoader
+from jinja2 import PackageLoader
 from jinja2 import StrictUndefined
 from loguru import logger
 from omegaconf import DictConfig
 
 from mhpy.utils.subprocess import run_cmd
 
-TEMPLATE_DIR = Path(__file__).parent.parent / "templates"
-jinja_env = Environment(loader=FileSystemLoader(TEMPLATE_DIR), undefined=StrictUndefined, keep_trailing_newline=True)
+jinja_env = Environment(loader=PackageLoader("mhpy.cli", "templates"), undefined=StrictUndefined, keep_trailing_newline=True)
 
 
 def create_file_from_template(filepath: Path, template_name: str, replacements: dict = {}) -> None:
