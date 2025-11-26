@@ -35,7 +35,7 @@ def _assert_no_code_leakage(package_name: str) -> None:
             f"‼️ Make sure your AI tool settings are configured so that no code is used for training by third parties. Type '{confirmation_code}' to confim: "
         )
         if response_code == confirmation_code:
-            return True
+            return
         else:
             logger.info("Try again...")
 

@@ -31,29 +31,29 @@ Basically, it saves you from copy-pasting the same boilerplate across projects.
 ### Basic install (just the CLI)
 pip:
 ```bash
-pip install git+https://github.com/NikitaGordia/mhpy.git
+pip install git+https://github.com/mykytahordia/mhpy.git
 ```
 uv:
 ```bash
-uv tool install git+https://github.com/NikitaGordia/mhpy.git
+uv tool install git+https://github.com/mykytahordia/mhpy.git
 ```
 
 ### With ML dependencies and utils (PyTorch, W&B, etc.)
 
 ```bash
-pip install "mhpy[ml] @ git+https://github.com/NikitaGordia/mhpy.git"
+pip install "mhpy[ml] @ git+https://github.com/mykytahordia/mhpy.git"
 ```
 
 ### With dev dependencies (pytest, pre-commit, etc.)
 
 ```bash
-pip install "mhpy[dev] @ git+https://github.com/NikitaGordia/mhpy.git"
+pip install "mhpy[dev] @ git+https://github.com/mykytahordia/mhpy.git"
 ```
 
 ### Everything
 
 ```bash
-pip install "mhpy[all] @ git+https://github.com/NikitaGordia/mhpy.git"
+pip install "mhpy[all] @ git+https://github.com/mykytahordia/mhpy.git"
 ```
 
 ### For development
@@ -61,7 +61,7 @@ pip install "mhpy[all] @ git+https://github.com/NikitaGordia/mhpy.git"
 If you want to try it youself:
 
 ```bash
-git clone https://github.com/NikitaGordia/mhpy.git
+git clone https://github.com/mykytahordia/mhpy.git
 cd mhpy
 pip install uv  # if you don't have it
 uv sync --all-extras

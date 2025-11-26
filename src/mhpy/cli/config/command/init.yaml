@@ -37,7 +37,7 @@ uv:
     - pytest
     - pytest-cov
 
-mhpy_url: mhpy[ml] @ git+https://github.com/NikitaGordia/mhpy.git
+mhpy_url: mhpy[ml] @ git+https://github.com/mykytahordia/mhpy.git
 
 
 data_states:
