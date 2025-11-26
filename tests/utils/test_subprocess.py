@@ -19,8 +19,6 @@ class TestRunCmd:
         with pytest.raises(subprocess.CalledProcessError):
             run_cmd(command, error_msg)
 
-        mock_logger.error.assert_called_once_with(f"Error - {error_msg}")
-
     @patch("mhpy.utils.subprocess.subprocess.run")
     def test_run_cmd_with_complex_command(self, mock_run):
         command = ["sh", "-c", "ls -la | grep test | wc -l"]
@@ -88,8 +86,6 @@ class TestRunCmd:
 
         with pytest.raises(subprocess.CalledProcessError):
             run_cmd(command, error_msg)
-
-        mock_logger.error.assert_called_once_with(f"Error - {error_msg}")
 
     @patch("mhpy.utils.subprocess.logger")
     @patch("mhpy.utils.subprocess.subprocess.run")

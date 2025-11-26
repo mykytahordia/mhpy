@@ -21,5 +21,5 @@ def run_cmd(command: list[str], error_msg: str, env: dict = {}) -> None:
             env=run_env,
         )
     except subprocess.CalledProcessError as e:
-        logger.error(f"Error - {error_msg}")
+        logger.error(f"Error - {error_msg}, {e.stderr}")
         raise e
