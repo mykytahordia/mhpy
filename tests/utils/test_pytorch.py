@@ -1,5 +1,9 @@
+from unittest.mock import patch
+
+import torch
 import torch.nn as nn
 
+from mhpy.utils.pytorch import get_dtype
 from mhpy.utils.pytorch import get_model_size
 
 
@@ -110,3 +114,58 @@ class TestGetModelSize:
 
         assert param_count == 20
         assert size_mb > 0
+
+
+class TestGetDtype:
+    def test_get_dtype_returns_float32_when_use_gpu_false(self):
+        dtype, use_grad_scaler = get_dtype(use_gpu=False, use_bf16=True)
+
+        assert dtype == torch.float32
+        assert use_grad_scaler is False
+
+    def test_get_dtype_returns_float32_when_cuda_not_available(self):
+        with patch("torch.cuda.is_available", return_value=False):
+            dtype, use_grad_scaler = get_dtype(use_gpu=True, use_bf16=True)
+
+        assert dtype == torch.float32
+        assert use_grad_scaler is False
+
+    def test_get_dtype_returns_bfloat16_when_bf16_supported(self):
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.is_bf16_supported", return_value=True),
+        ):
+            dtype, use_grad_scaler = get_dtype(use_gpu=True, use_bf16=True)
+
+        assert dtype == torch.bfloat16
+        assert use_grad_scaler is False
+
+    def test_get_dtype_returns_float16_when_bf16_not_supported(self):
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.is_bf16_supported", return_value=False),
+        ):
+            dtype, use_grad_scaler = get_dtype(use_gpu=True, use_bf16=True)
+
+        assert dtype == torch.float16
+        assert use_grad_scaler is True
+
+    def test_get_dtype_returns_float16_when_use_bf16_false(self):
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.is_bf16_supported", return_value=True),
+        ):
+            dtype, use_grad_scaler = get_dtype(use_gpu=True, use_bf16=False)
+
+        assert dtype == torch.float16
+        assert use_grad_scaler is True
+
+    def test_get_dtype_default_parameters(self):
+        with (
+            patch("torch.cuda.is_available", return_value=True),
+            patch("torch.cuda.is_bf16_supported", return_value=True),
+        ):
+            dtype, use_grad_scaler = get_dtype()
+
+        assert dtype == torch.bfloat16
+        assert use_grad_scaler is False

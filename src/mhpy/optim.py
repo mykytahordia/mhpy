@@ -4,7 +4,16 @@ import torch
 class AWP:
     """Adversarial weight perturbation (AWP)"""
 
-    def __init__(self, model, optimizer, *, adv_param="weight", adv_lr=0.001, adv_eps=0.001, eps=1e-6):
+    def __init__(
+        self,
+        model: torch.nn.Module,
+        optimizer: torch.optim.Optimizer,
+        *,
+        adv_param: str = "weight",
+        adv_lr: float = 0.001,
+        adv_eps: float = 0.001,
+        eps: float = 1e-6,
+    ):
         assert isinstance(
             optimizer,
             (
@@ -24,11 +33,11 @@ class AWP:
         self.backup = {}
         self.eps = eps
 
-    def perturb(self):
+    def perturb(self) -> None:
         self._save()
         self._attack_step()
 
-    def _attack_step(self):
+    def _attack_step(self) -> None:
         for name, param in self.model.named_parameters():
             if param.requires_grad and param.grad is not None and self.adv_param in name:
                 grad = self.optimizer.state[param]["exp_avg"]
@@ -45,7 +54,7 @@ class AWP:
 
                     param.data.clamp_(param_min, param_max)
 
-    def _save(self):
+    def _save(self) -> None:
         for name, param in self.model.named_parameters():
             if param.requires_grad and param.grad is not None and self.adv_param in name:
                 if name not in self.backup:
@@ -53,7 +62,7 @@ class AWP:
                 else:
                     self.backup[name].copy_(param.data)
 
-    def restore(self):
+    def restore(self) -> None:
         for name, param in self.model.named_parameters():
             if name in self.backup:
                 param.data.copy_(self.backup[name])

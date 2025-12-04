@@ -1,4 +1,7 @@
 name: Pytest
+
+env:
+  UV_LINK_MODE: copy
 on:
   pull_request:
   push:
