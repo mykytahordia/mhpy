@@ -39,6 +39,9 @@ mhpy = "mhpy.cli.main:main"
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.setuptools.package-data]
+"*" = ["*.yaml", "*.jinja"]
+
 [tool.setuptools]
 include-package-data = true
 

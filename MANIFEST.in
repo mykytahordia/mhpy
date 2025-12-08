@@ -1,1 +1,2 @@
 recursive-include src/mhpy/cli/templates *.jinja
+recursive-include src/mhpy/cli/config *.yaml
