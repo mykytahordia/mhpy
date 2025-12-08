@@ -1,56 +1,7 @@
-import os
-import random
 from unittest.mock import MagicMock
 from unittest.mock import patch
 
-import numpy as np
-import torch
-
 from mhpy.utils.common import configure_logger
-from mhpy.utils.common import set_seed
-
-
-class TestSetSeed:
-    def test_set_seed_default(self):
-        set_seed()
-
-        py_random = random.random()
-        np_random = np.random.rand()
-        torch_random = torch.rand(1).item()
-
-        set_seed()
-
-        assert random.random() == py_random
-        assert np.random.rand() == np_random
-        assert torch.rand(1).item() == torch_random
-
-    def test_set_seed_custom(self):
-        custom_seed = 42
-        set_seed(custom_seed)
-
-        py_random = random.random()
-        np_random = np.random.rand()
-        torch_random = torch.rand(1).item()
-
-        set_seed(custom_seed)
-
-        assert random.random() == py_random
-        assert np.random.rand() == np_random
-        assert torch.rand(1).item() == torch_random
-
-    def test_set_seed_different_seeds(self):
-        set_seed(42)
-        value1 = random.random()
-
-        set_seed(123)
-        value2 = random.random()
-
-        assert value1 != value2
-
-    def test_set_seed_environment_variable(self):
-        seed = 999
-        set_seed(seed)
-        assert os.environ["PYTHONHASHSEED"] == str(seed)
 
 
 class TestConfigureLogger:

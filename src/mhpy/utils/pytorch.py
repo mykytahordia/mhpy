@@ -1,4 +1,8 @@
+import os
+import random
+
 from loguru import logger
+import numpy as np
 import torch
 import torch.nn as nn
 
@@ -99,3 +103,32 @@ def get_model_size(model: nn.Module) -> tuple[int, float]:
 
     size_all_mb = (param_size + buffer_size) / 1024**2
     return param_count, size_all_mb
+
+
+def set_seed(seed: int = 2048, deterministic: bool = False) -> None:
+    """
+    Sets seeds for all random number generators.
+
+    Args:
+        seed (int): The seed value.
+        deterministic (bool): If True, sets flags that ensure reproducibility
+                              at the cost of performance (slower training).
+                              If False, prioritizes speed (enables cudnn.benchmark).
+    """
+    random.seed(seed)
+    np.random.seed(seed)
+    os.environ["PYTHONHASHSEED"] = str(seed)
+
+    torch.manual_seed(seed)
+    torch.cuda.manual_seed(seed)
+    torch.cuda.manual_seed_all(seed)
+
+    if deterministic:
+        torch.use_deterministic_algorithms(True)
+        torch.backends.cudnn.deterministic = True
+        torch.backends.cudnn.benchmark = False
+        os.environ["CUBLAS_WORKSPACE_CONFIG"] = ":4096:8"
+    else:
+        torch.use_deterministic_algorithms(False)
+        torch.backends.cudnn.deterministic = False
+        torch.backends.cudnn.benchmark = True
