@@ -176,7 +176,7 @@ def _final_commit() -> None:
     logger.info("Finalizing project setup...")
     run_cmd(["git", "add", "."], "Failed to add all new files to git")
     run_cmd(
-        ["git", "commit", "-m", "feat: Initial project setup from mhpy template"],
+        ["git", "commit", "-m", "Initial project setup from mhpy template"],
         "Failed to create final commit",
     )
 
