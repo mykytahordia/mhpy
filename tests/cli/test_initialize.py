@@ -468,6 +468,6 @@ class TestFinalCommit:
 
         mock_run_cmd.assert_any_call(["git", "add", "."], "Failed to add all new files to git")
         mock_run_cmd.assert_any_call(
-            ["git", "commit", "-m", "feat: Initial project setup from mhpy template"],
+            ["git", "commit", "-m", "Initial project setup from mhpy template"],
             "Failed to create final commit",
         )
