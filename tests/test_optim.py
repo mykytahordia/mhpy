@@ -3,6 +3,7 @@ import torch
 import torch.nn as nn
 
 from mhpy.optim import AWP
+from mhpy.optim import split_parameters_for_weight_decay
 
 
 class SimpleModel(nn.Module):
@@ -312,3 +313,132 @@ class TestAWPIntegration:
 
         optimizer.step()
         optimizer.zero_grad()
+
+
+def _param_in_list(param, param_list):
+    return any(p is param for p in param_list)
+
+
+class TestSplitParametersForWeightDecay:
+    def test_linear_layer_weight_gets_decay(self):
+        model = nn.Sequential(nn.Linear(10, 5))
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        assert len(result) == 2
+        assert result[0]["weight_decay"] == weight_decay
+        assert result[1]["weight_decay"] == 0.0
+        assert _param_in_list(model[0].weight, result[0]["params"])
+        assert _param_in_list(model[0].bias, result[1]["params"])
+
+    def test_conv_layer_weight_gets_decay(self):
+        model = nn.Sequential(nn.Conv2d(3, 16, kernel_size=3))
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        assert _param_in_list(model[0].weight, result[0]["params"])
+        assert _param_in_list(model[0].bias, result[1]["params"])
+
+    def test_layernorm_excluded_from_decay(self):
+        model = nn.Sequential(nn.LayerNorm(10))
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        assert len(result[0]["params"]) == 0
+        assert _param_in_list(model[0].weight, result[1]["params"])
+        assert _param_in_list(model[0].bias, result[1]["params"])
+
+    def test_batchnorm_excluded_from_decay(self):
+        model = nn.Sequential(nn.BatchNorm1d(10))
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        assert len(result[0]["params"]) == 0
+        assert _param_in_list(model[0].weight, result[1]["params"])
+        assert _param_in_list(model[0].bias, result[1]["params"])
+
+    def test_sequential_model_with_mixed_layers(self):
+        model = nn.Sequential(
+            nn.Linear(10, 20),
+            nn.LayerNorm(20),
+            nn.Linear(20, 5),
+        )
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        decay_params = result[0]["params"]
+        no_decay_params = result[1]["params"]
+
+        assert _param_in_list(model[0].weight, decay_params)
+        assert _param_in_list(model[0].bias, no_decay_params)
+        assert _param_in_list(model[1].weight, no_decay_params)
+        assert _param_in_list(model[1].bias, no_decay_params)
+        assert _param_in_list(model[2].weight, decay_params)
+        assert _param_in_list(model[2].bias, no_decay_params)
+
+    def test_frozen_parameters_excluded(self):
+        model = nn.Sequential(nn.Linear(10, 5))
+        model[0].weight.requires_grad = False
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        all_params = result[0]["params"] + result[1]["params"]
+        assert not _param_in_list(model[0].weight, all_params)
+        assert _param_in_list(model[0].bias, result[1]["params"])
+
+    def test_embedding_weight_gets_decay(self):
+        model = nn.Sequential(nn.Embedding(100, 32))
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        assert _param_in_list(model[0].weight, result[0]["params"])
+
+    def test_custom_no_decay_layer_types(self):
+        class CustomNorm(nn.Module):
+            def __init__(self, dim):
+                super().__init__()
+                self.weight = nn.Parameter(torch.ones(dim))
+
+            def forward(self, x):
+                return x * self.weight
+
+        model = nn.Sequential(CustomNorm(10))
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay, no_decay_layer_types=(CustomNorm,))
+
+        assert _param_in_list(model[0].weight, result[1]["params"])
+        assert len(result[0]["params"]) == 0
+
+    def test_all_parameters_accounted_for(self):
+        model = nn.Sequential(
+            nn.Linear(10, 20),
+            nn.BatchNorm1d(20),
+            nn.ReLU(),
+            nn.Conv2d(1, 8, 3),
+            nn.GroupNorm(2, 8),
+            nn.Linear(20, 5),
+        )
+        weight_decay = 0.01
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        all_split_params = set(result[0]["params"]) | set(result[1]["params"])
+        all_model_params = set(p for p in model.parameters() if p.requires_grad)
+        assert all_split_params == all_model_params
+
+    def test_zero_weight_decay(self):
+        model = nn.Sequential(nn.Linear(10, 5))
+        weight_decay = 0.0
+
+        result = split_parameters_for_weight_decay(model, weight_decay)
+
+        assert result[0]["weight_decay"] == 0.0
+        assert result[1]["weight_decay"] == 0.0
