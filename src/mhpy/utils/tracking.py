@@ -70,8 +70,13 @@ def assert_clean_git(repo_path: str = ".", ignore_paths: list[str] = ["configs"]
         logger.error("This directory is not a Git repository. Skipping check.")
         return
 
-    for diff_item in repo.index.diff(None):
-        file_path = Path(diff_item.a_path)
+    staged_diffs = repo.index.diff("HEAD")
+    unstaged_diffs = repo.index.diff(None)
+
+    all_diffs = list(staged_diffs) + list(unstaged_diffs)
+
+    for diff_item in all_diffs:
+        file_path = Path(diff_item.a_path or diff_item.b_path)
         if not _path_is_relative(file_path, ignore_paths):
             raise GitStatusError()
 
