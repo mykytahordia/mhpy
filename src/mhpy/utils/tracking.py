@@ -60,8 +60,9 @@ def _path_is_relative(path: Path, parents: list[Path]):
     return any([path.is_relative_to(parent) for parent in parents])
 
 
-def assert_clean_git(module_name: str, repo_path: str = ".", ignore_submodules: list[str] = ["config"]) -> None:
-    ignore_paths = [Path(f"src/{module_name}/{submodule}") for submodule in ignore_submodules]
+def assert_clean_git(repo_path: str = ".", ignore_paths: list[str] = ["configs"]) -> None:
+    repo_dir = Path(repo_path)
+    ignore_paths = [repo_dir / ignore_path for ignore_path in ignore_paths]
 
     try:
         repo = git.Repo(repo_path)

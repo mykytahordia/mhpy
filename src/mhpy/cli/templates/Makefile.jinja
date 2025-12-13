@@ -1,14 +1,16 @@
-VENV_PYTHON = .venv/bin/python
-CONFIG_DIR ?= src/{{PACKAGE_NAME}}/{{HYDRA_SUBMODULE}}
+CONFIG_DIR ?= {{HYDRA_PATH}}
 HYDRA ?=
 
-.PHONY: train
+.PHONY: train clean format commit-check
+
+commit-check:
+	uv run pre-commit run --all-files
 
 train: 
-	$(VENV_PYTHON) -m {{PACKAGE_NAME}}.train --config-dir $(CONFIG_DIR) $(HYDRA)
+	uv run python scripts/train.py --config-dir $(CONFIG_DIR) $(HYDRA)
 
 clean:
 	rm -rf __pycache__ .pytest_cache dist build *.egg-info
 
 format:
-	ruff check --fix src
+	uv run ruff check --fix src

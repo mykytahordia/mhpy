@@ -9,7 +9,7 @@ from omegaconf import OmegaConf
 @hydra.main(version_base=None, config_name="config")
 def train(cfg: DictConfig) -> None:
     configure_logger()
-    assert_clean_git("{{PACKAGE_NAME}}")
+    assert_clean_git()
 
     logger.info("🚀 Starting training...")
     logger.debug(f"Full config: \n{OmegaConf.to_yaml(cfg)}")
