@@ -28,6 +28,15 @@ def append_template_to_file(filepath: Path, template_name: str, replacements: di
         f.write(content)
 
 
+def prepend_template_to_file(filename: Path, template_name: str, replacements: dict = {}):
+    content = jinja_env.get_template(template_name).render(**replacements)
+    file_path = Path(filename)
+    original_content = file_path.read_text()
+
+    new_content = content + original_content
+    file_path.write_text(new_content)
+
+
 def _assert_no_code_leakage(package_name: str) -> None:
     while True:
         confirmation_code = f"{package_name}_{str(uuid.uuid4())[:4]}"
@@ -83,7 +92,8 @@ def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConf
     (package_root / "__init__.py").touch()
     logger.info(f"Created src structure at: {project_root / 'src'}")
 
-    append_template_to_file(project_root / "pyproject.toml", "pyproject_append.toml.jinja", {"PACKAGE_NAME": package_name})
+    append_template_to_file(project_root / "pyproject.toml", "pyproject_suffix.toml.jinja", {"PACKAGE_NAME": package_name})
+    prepend_template_to_file(project_root / "pyproject.toml", "pyproject_prefix.toml.jinja")
     logger.info("Updated: pyproject.toml")
 
     run_cmd(
@@ -93,7 +103,6 @@ def _uv(project_root: Path, package_root: Path, package_name: str, cfg: DictConf
     )
     run_cmd(["uv", "add", cfg.mhpy_url], "Failed at adding mhpy library as python package")
 
-    run_cmd(["uv", "pip", "install", "-e", "."], "Failed to install project in editable mode")
     logger.info("✅ Virtual environment created and project installed.")
     logger.info("Run 'source .venv/bin/activate' to activate it.")
 

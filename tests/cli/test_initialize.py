@@ -167,9 +167,10 @@ class TestGit:
 
 class TestUv:
     @patch("mhpy.cli.commands.initialize.run_cmd")
+    @patch("mhpy.cli.commands.initialize.prepend_template_to_file")
     @patch("mhpy.cli.commands.initialize.append_template_to_file")
     @patch("mhpy.cli.commands.initialize.logger")
-    def test_uv_setup(self, mock_logger, mock_append_template, mock_run_cmd, temp_project_dir, mock_cfg):
+    def test_uv_setup(self, mock_logger, mock_append_template, mock_prepend_template, mock_run_cmd, temp_project_dir, mock_cfg):
         package_root = temp_project_dir / "src" / "test_project"
 
         _uv(temp_project_dir, package_root, "test_project", mock_cfg)
@@ -181,10 +182,12 @@ class TestUv:
 
         mock_run_cmd.assert_any_call(["uv", "init", "--bare", f"--python={mock_cfg.python_version}"], "Failed to initialize uv")
         mock_append_template.assert_called_once()
+        mock_prepend_template.assert_called_once()
 
     @patch("mhpy.cli.commands.initialize.run_cmd")
+    @patch("mhpy.cli.commands.initialize.prepend_template_to_file")
     @patch("mhpy.cli.commands.initialize.append_template_to_file")
-    def test_uv_installs_packages(self, mock_append_template, mock_run_cmd, temp_project_dir, mock_cfg):
+    def test_uv_installs_packages(self, mock_append_template, mock_prepend_template, mock_run_cmd, temp_project_dir, mock_cfg):
         package_root = temp_project_dir / "src" / "test_project"
 
         _uv(temp_project_dir, package_root, "test_project", mock_cfg)
