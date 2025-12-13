@@ -46,7 +46,7 @@ data_states:
   - processed
 
 hydra:
-  submodule: config
+  subdir: configs
   configs:
     - model
     - train

@@ -5,12 +5,13 @@ import hydra
 from loguru import logger
 
 
-def configure_logger(save_logs: bool = True) -> None:
+def configure_logger(debug=False, save_logs: bool = True) -> None:
+    level = "DEBUG" if debug else "INFO"
     logger.remove()
 
     logger.add(
         sys.stderr,
-        level="DEBUG",
+        level=level,
         colorize=True,
         enqueue=True,
         diagnose=False,
@@ -24,10 +25,25 @@ def configure_logger(save_logs: bool = True) -> None:
         logger.add(
             log_file_path,
             format="{time:YYYY-MM-DD HH:mm:ss.SSS} | {level: <8} | {name}:{function}:{line} - {message}",
-            level="DEBUG",
+            level=level,
             rotation="100 MB",
             enqueue=True,
             diagnose=True,
         )
 
         logger.info(f"Logging to {log_file_path}")
+
+
+def launch_debugger(ui: bool = True) -> None:
+    try:
+        if ui:
+            import pudb as debugger
+
+            logger.info("Using PuDB (Visual Debugger)")
+        else:
+            raise ImportError
+    except ImportError:
+        import pdb as debugger
+
+        logger.info("Using PDB (Standard Debugger) - PuDB not installed")
+    debugger.post_mortem()

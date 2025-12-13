@@ -1310,6 +1310,7 @@ dependencies = [
     { name = "hydra-core" },
     { name = "jinja2" },
     { name = "loguru" },
+    { name = "pudb" },
     { name = "ruff" },
 ]
 
@@ -1350,6 +1351,7 @@ requires-dist = [
     { name = "mhpy", extras = ["ml", "dev"], marker = "extra == 'all'" },
     { name = "numpy", marker = "extra == 'ml'", specifier = ">=1.24.4" },
     { name = "pre-commit", marker = "extra == 'dev'", specifier = ">=4.4.0" },
+    { name = "pudb", specifier = ">=2025.1.5" },
     { name = "pytest", marker = "extra == 'dev'", specifier = ">=8.3.5" },
     { name = "pytest-cov", marker = "extra == 'dev'", specifier = ">=5.0.0" },
     { name = "ruff", specifier = ">=0.14.6" },
@@ -1907,6 +1909,23 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/20/e5/16ff212c1e452235a90aeb09066144d0c5a6a8c0834397e03f5224495c4e/ptyprocess-0.7.0.tar.gz", hash = "sha256:5c5d0a3b48ceee0b48485e0c26037c0acd7d29765ca3fbb5cb3831d347423220", size = 70762 }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/22/a6/858897256d0deac81a172289110f31629fc4cee19b6f01283303e18c8db3/ptyprocess-0.7.0-py2.py3-none-any.whl", hash = "sha256:4b41f3967fce3af57cc7e94b888626c18bf37a083e3651ca8feeb66d492fef35", size = 13993 },
+]
+
+[[package]]
+name = "pudb"
+version = "2025.1.5"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "jedi" },
+    { name = "packaging" },
+    { name = "pygments" },
+    { name = "typing-extensions" },
+    { name = "urwid" },
+    { name = "urwid-readline" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f5/69/0c52c6058da586e173e48ef8f9c45bc805d9df78d5ad4d69467ff68694b5/pudb-2025.1.5.tar.gz", hash = "sha256:e6dedb81fc3c8cdcd66cf62e86337cb913570ebb2c994c9ab52012d059e086ad", size = 225714 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b6/af/42f4877e71728dd59ed7080205f29eba16406f5783c29cdc850200138c80/pudb-2025.1.5-py3-none-any.whl", hash = "sha256:e40c69f102d534cc7b86020c0217e3d424ee81b14a229d068ac122089c301f59", size = 92638 },
 ]
 
 [[package]]
@@ -2602,6 +2621,27 @@ sdist = { url = "https://files.pythonhosted.org/packages/15/22/9ee70a2574a4f4599
 wheels = [
     { url = "https://files.pythonhosted.org/packages/a7/c2/fe1e52489ae3122415c51f387e221dd0773709bad6c6cdaa599e8a2c5185/urllib3-2.5.0-py3-none-any.whl", hash = "sha256:e6b01673c0fa6a13e374b50871808eb3bf7046c4b125b216f6bf1cc604cff0dc", size = 129795 },
 ]
+
+[[package]]
+name = "urwid"
+version = "3.0.4"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "wcwidth" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/e0/4d/f0832a6bf0986bdd770d61f9cf9e9915741171502c0c399bf934c72a3e5e/urwid-3.0.4.tar.gz", hash = "sha256:c3d0d2f47602b21949ffb8669a7ef0a8ca5fa13ed5c1ee1d2d81edf05616187f", size = 855817 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/b7/7b/f5b972d3d1cbbf1dc2ee3c556e7b0e4e3e93067a8bb97b391b510dac76d7/urwid-3.0.4-py3-none-any.whl", hash = "sha256:85f41a43e1e12ac3b51c0fd12128fa0e4e7b440be2e4e1aab205f5331b79959b", size = 296332 },
+]
+
+[[package]]
+name = "urwid-readline"
+version = "0.15.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "urwid" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ad/70/be318554495555eba7d8ff6e489f6f74ddb225b24086ba4af62a82e723fd/urwid_readline-0.15.1.tar.gz", hash = "sha256:9301444b86d58f7d26388506b704f142cefd193888488b4070d3a0fdfcfc0f84", size = 9007 }
 
 [[package]]
 name = "virtualenv"

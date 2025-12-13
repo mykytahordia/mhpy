@@ -9,6 +9,7 @@ from jinja2 import StrictUndefined
 from loguru import logger
 from omegaconf import DictConfig
 
+from mhpy.utils.common import launch_debugger
 from mhpy.utils.subprocess import run_cmd
 
 jinja_env = Environment(loader=PackageLoader("mhpy.cli", "templates"), undefined=StrictUndefined, keep_trailing_newline=True)
@@ -135,17 +136,16 @@ def _pre_commit(project_root: Path) -> None:
     run_cmd(["uv", "run", "pre-commit", "install"], "Failed to install pre-commit hooks")
 
 
-def _makefile(project_root: Path, package_name: str, hydra_submodule: str) -> None:
+def _makefile(project_root: Path, package_name: str, hydra_subdir: str) -> None:
     logger.info("Creating Makefile...")
-    create_file_from_template(project_root / "Makefile", "Makefile.jinja", {"PACKAGE_NAME": package_name, "HYDRA_SUBMODULE": hydra_submodule})
+    create_file_from_template(project_root / "Makefile", "Makefile.jinja", {"HYDRA_PATH": hydra_subdir})
 
 
-def _hydra_configs(package_root: Path, cfg: DictConfig) -> None:
+def _hydra_configs(project_root: Path, cfg: DictConfig) -> None:
     logger.info("Creating default hydra configs...")
-    hydra_dir = package_root / cfg.hydra.submodule
+    hydra_dir = project_root / cfg.hydra.subdir
 
     hydra_dir.mkdir(parents=True, exist_ok=True)
-    (hydra_dir / "__init__.py").touch()
 
     create_file_from_template(hydra_dir / "config.yaml", "hydra_config.yaml.jinja")
 
@@ -168,12 +168,9 @@ def _other_dirs(project_root: Path, cfg: DictConfig) -> None:
         (project_root / dir).mkdir(exist_ok=True)
 
 
-def _py_templates(package_root: Path, package_name: str) -> None:
-    create_file_from_template(
-        package_root / "train.py",
-        "train.py.jinja",
-        {"PACKAGE_NAME": package_name},
-    )
+def _py_templates(project_root: Path, cfg: DictConfig) -> None:
+    if "scripts" in cfg.other_dirs:
+        create_file_from_template(project_root / "scripts" / "train.py", "train.py.jinja")
 
 
 def _ipynb_templates(project_root: Path, cfg: DictConfig) -> None:
@@ -225,11 +222,11 @@ def init(cfg: DictConfig) -> None:
         _dvc(project_root, cfg)
         _wandb(project_root)
         _pre_commit(project_root)
-        _makefile(project_root, package_name, cfg.hydra.submodule)
-        _hydra_configs(package_root, cfg)
+        _makefile(project_root, package_name, cfg.hydra.subdir)
+        _hydra_configs(project_root, cfg)
         _tests(project_root)
         _other_dirs(project_root, cfg)
-        _py_templates(package_root, package_name)
+        _py_templates(project_root, cfg)
         _ipynb_templates(project_root, cfg)
         _final_commit()
         _print_summary()
@@ -238,3 +235,5 @@ def init(cfg: DictConfig) -> None:
         if not cfg.debug:
             _cleanup(project_root)
             logger.info(f"All changes in {project_root} have been removed.")
+        else:
+            launch_debugger()

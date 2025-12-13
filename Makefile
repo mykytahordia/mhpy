@@ -1,14 +1,16 @@
-VIRTUAL_ENV ?= .venv
 CONFIG_DIR ?= src/mhpy/config
 HYDRA ?=
 
-.PHONY: reinstall
+.PHONY: reinstall clean format commit-check
+
+commit-check:
+	uv run pre-commit run --all-files
 
 reinstall: 
-	VIRTUAL_ENV=$(VIRTUAL_ENV) uv pip install -e ".[all]"
+	uv pip install -e ".[all]"
 
 clean:
 	rm -rf __pycache__ .pytest_cache dist build *.egg-info
 
 format:
-	ruff check --fix src
+	uv run ruff check --fix src

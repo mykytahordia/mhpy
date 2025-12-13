@@ -40,7 +40,7 @@ def mock_cfg():
         "uv": {"timeout": 100000, "packages": ["pytest", "numpy"]},
         "mhpy_url": "mhpy[ml] @ git+https://github.com/mykytahordia/mhpy.git",
         "data_states": ["raw", "interim", "processed"],
-        "hydra": {"submodule": "config", "configs": ["model", "train", "data"]},
+        "hydra": {"subdir": "config", "configs": ["model", "train", "data"]},
         "other_dirs": ["notebooks", "scripts"],
         "debug": False,
     }
@@ -240,7 +240,7 @@ class TestMakefile:
         mock_create_file.assert_called_once_with(
             temp_project_dir / "Makefile",
             "Makefile.jinja",
-            {"PACKAGE_NAME": "test_project", "HYDRA_SUBMODULE": "config"},
+            {"HYDRA_PATH": "config"},
         )
 
 
@@ -253,7 +253,6 @@ class TestHydraConfigs:
 
         hydra_dir = package_root / "config"
         assert hydra_dir.exists()
-        assert (hydra_dir / "__init__.py").exists()
         assert (hydra_dir / "model").exists()
         assert (hydra_dir / "train").exists()
         assert (hydra_dir / "data").exists()
@@ -281,12 +280,13 @@ class TestOtherDirs:
 
 class TestPyTemplates:
     @patch("mhpy.cli.commands.initialize.create_file_from_template")
-    def test_py_templates_creation(self, mock_create_file, temp_project_dir):
+    def test_py_templates_creation(self, mock_create_file, temp_project_dir, mock_cfg):
         package_root = temp_project_dir / "src" / "test_project"
+        (package_root / "scripts").mkdir(parents=True, exist_ok=True)
 
-        _py_templates(package_root, "test_project")
+        _py_templates(package_root, mock_cfg)
 
-        mock_create_file.assert_called_once_with(package_root / "train.py", "train.py.jinja", {"PACKAGE_NAME": "test_project"})
+        mock_create_file.assert_called_once_with(package_root / "scripts" / "train.py", "train.py.jinja")
 
 
 class TestCleanup:
@@ -379,11 +379,12 @@ class TestInit:
         mock_logger.error.assert_called()
         mock_cleanup.assert_called_once_with(temp_project_dir)
 
+    @patch("mhpy.cli.commands.initialize.launch_debugger")
     @patch("mhpy.cli.commands.initialize._cleanup")
     @patch("mhpy.cli.commands.initialize._prompting")
     @patch("mhpy.cli.commands.initialize._git")
     @patch("mhpy.cli.commands.initialize.logger")
-    def test_init_error_debug_mode_no_cleanup(self, mock_logger, mock_git, mock_prompting, mock_cleanup, temp_project_dir):
+    def test_init_error_debug_mode_no_cleanup(self, mock_logger, mock_git, mock_prompting, mock_cleanup, mock_launch_debugger, temp_project_dir):
         cfg_dict = {
             "package_name": "test_project",
             "python_version": "3.12",
@@ -392,7 +393,7 @@ class TestInit:
             "uv": {"timeout": 100000, "packages": []},
             "mhpy_url": "mhpy",
             "data_states": ["raw"],
-            "hydra": {"submodule": "config", "configs": []},
+            "hydra": {"subdir": "config", "configs": []},
             "other_dirs": [],
             "debug": True,
         }
@@ -406,6 +407,7 @@ class TestInit:
 
         mock_logger.error.assert_called()
         mock_cleanup.assert_not_called()
+        mock_launch_debugger.assert_called_once()
 
 
 class TestAssertNoCodeLeakage:
