@@ -1,7 +1,7 @@
 name: Pytest
 
 env:
-  UV_LINK_MODE: copy
+  UV_LINK_MODE: symlink
 on:
   pull_request:
   push:
