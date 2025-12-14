@@ -1,9 +1,9 @@
 CONFIG_DIR ?= {{HYDRA_PATH}}
 HYDRA ?=
 
-.PHONY: train clean format commit-check
+.PHONY: train clean format check
 
-commit-check:
+check:
 	uv run pre-commit run --all-files
 
 train: 
