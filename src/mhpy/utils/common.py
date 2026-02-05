@@ -5,6 +5,14 @@ import hydra
 from loguru import logger
 
 
+def get_hydra_cfg() -> hydra.core.hydra_config.HydraConfig:
+    return hydra.core.hydra_config.HydraConfig.get()
+
+
+def get_run_dir() -> Path:
+    return Path(get_hydra_cfg().runtime.output_dir)
+
+
 def configure_logger(debug=False, save_logs: bool = True) -> None:
     level = "DEBUG" if debug else "INFO"
     logger.remove()
@@ -18,8 +26,7 @@ def configure_logger(debug=False, save_logs: bool = True) -> None:
     )
 
     if save_logs:
-        hydra_cfg = hydra.core.hydra_config.HydraConfig.get()
-        log_file_path = Path(hydra_cfg.runtime.output_dir) / f"{hydra_cfg.job.name}.log"
+        log_file_path = get_run_dir() / f"{get_hydra_cfg().job.name}.log"
         log_file_path.parent.mkdir(parents=True, exist_ok=True)
 
         logger.add(
