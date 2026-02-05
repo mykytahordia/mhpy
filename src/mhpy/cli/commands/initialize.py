@@ -9,7 +9,7 @@ from jinja2 import StrictUndefined
 from loguru import logger
 from omegaconf import DictConfig
 
-from mhpy.utils.common import launch_debugger
+from mhpy.utils.debug import launch_debugger
 from mhpy.utils.subprocess import run_cmd
 
 jinja_env = Environment(loader=PackageLoader("mhpy.cli", "templates"), undefined=StrictUndefined, keep_trailing_newline=True)

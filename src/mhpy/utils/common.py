@@ -39,18 +39,3 @@ def configure_logger(debug=False, save_logs: bool = True) -> None:
         )
 
         logger.info(f"Logging to {log_file_path}")
-
-
-def launch_debugger(ui: bool = True) -> None:
-    try:
-        if ui:
-            import pudb as debugger
-
-            logger.info("Using PuDB (Visual Debugger)")
-        else:
-            raise ImportError
-    except ImportError:
-        import pdb as debugger
-
-        logger.info("Using PDB (Standard Debugger) - PuDB not installed")
-    debugger.post_mortem()
