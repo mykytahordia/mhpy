@@ -13,7 +13,7 @@ class TestDebugTool:
             debug_dir = Path(tmpdir) / "debug_output"
             assert not debug_dir.exists()
 
-            DebugTool(dir=debug_dir)
+            DebugTool(log_dir=debug_dir)
 
             assert debug_dir.exists()
 
@@ -22,13 +22,23 @@ class TestDebugTool:
             debug_dir = Path(tmpdir) / "nested" / "debug" / "output"
             assert not debug_dir.exists()
 
-            DebugTool(dir=debug_dir)
+            DebugTool(log_dir=debug_dir)
 
             assert debug_dir.exists()
 
+    @patch("mhpy.utils.debug.get_run_dir")
+    def test_default_log_dir_uses_get_run_dir(self, mock_get_run_dir):
+        with tempfile.TemporaryDirectory() as tmpdir:
+            mock_get_run_dir.return_value = Path(tmpdir)
+
+            tool = DebugTool()
+
+            assert tool.log_dir == Path(tmpdir)
+            mock_get_run_dir.assert_called_once()
+
     def test_default_parameters(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir))
+            tool = DebugTool(log_dir=Path(tmpdir))
 
             assert tool.profile is False
             assert tool.record_cuda is False
@@ -37,7 +47,7 @@ class TestDebugTool:
 
     def test_custom_cuda_max_entries(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir), cuda_max_entries=50000)
+            tool = DebugTool(log_dir=Path(tmpdir), cuda_max_entries=50000)
 
             assert tool.cuda_max_entries == 50000
 
@@ -47,7 +57,7 @@ class TestDebugTool:
         mock_profile.return_value = mock_profiler
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir), profile=True)
+            tool = DebugTool(log_dir=Path(tmpdir), profile=True)
 
             assert tool.profile is True
             mock_profile.assert_called_once()
@@ -55,7 +65,7 @@ class TestDebugTool:
 
     def test_enter_returns_self(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir))
+            tool = DebugTool(log_dir=Path(tmpdir))
 
             result = tool.__enter__()
 
@@ -63,15 +73,15 @@ class TestDebugTool:
 
     def test_context_manager_usage(self):
         with tempfile.TemporaryDirectory() as tmpdir:
-            with DebugTool(dir=Path(tmpdir)) as tool:
+            with DebugTool(log_dir=Path(tmpdir)) as tool:
                 assert tool is not None
-                assert tool.dir == Path(tmpdir)
+                assert tool.log_dir == Path(tmpdir)
 
     @patch("mhpy.utils.debug.torch.cuda.is_available", return_value=True)
     @patch("mhpy.utils.debug.torch.cuda.memory._record_memory_history")
     def test_enter_starts_cuda_recording_when_enabled(self, mock_record, mock_cuda_available):
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir), record_cuda=True)
+            tool = DebugTool(log_dir=Path(tmpdir), record_cuda=True)
             tool.__enter__()
 
             mock_record.assert_called_once_with(max_entries=100000)
@@ -80,7 +90,7 @@ class TestDebugTool:
     @patch("mhpy.utils.debug.torch.cuda.memory._record_memory_history")
     def test_enter_skips_cuda_when_unavailable(self, mock_record, mock_cuda_available):
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir), record_cuda=True)
+            tool = DebugTool(log_dir=Path(tmpdir), record_cuda=True)
             tool.__enter__()
 
             mock_record.assert_not_called()
@@ -88,7 +98,7 @@ class TestDebugTool:
     @patch("mhpy.utils.debug.torch.cuda.is_available", return_value=False)
     def test_enter_skips_cuda_when_disabled(self, mock_cuda_available):
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir), record_cuda=False)
+            tool = DebugTool(log_dir=Path(tmpdir), record_cuda=False)
             tool.__enter__()
 
     @patch("mhpy.utils.debug.torch.profiler.profile")
@@ -98,7 +108,7 @@ class TestDebugTool:
         mock_profile.return_value = mock_profiler
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir), profile=True)
+            tool = DebugTool(log_dir=Path(tmpdir), profile=True)
             tool.__enter__()
             tool.__exit__(None, None, None)
 
@@ -111,7 +121,7 @@ class TestDebugTool:
     @patch("mhpy.utils.debug.logger")
     def test_exit_dumps_cuda_snapshot(self, mock_logger, mock_record, mock_dump, mock_cuda_available):
         with tempfile.TemporaryDirectory() as tmpdir:
-            tool = DebugTool(dir=Path(tmpdir), record_cuda=True)
+            tool = DebugTool(log_dir=Path(tmpdir), record_cuda=True)
             tool.__enter__()
             tool.__exit__(None, None, None)
 
