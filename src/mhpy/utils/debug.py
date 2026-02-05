@@ -4,11 +4,13 @@ from pathlib import Path
 from loguru import logger
 import torch
 
+from mhpy.utils.common import get_run_dir
+
 
 class DebugTool:
-    def __init__(self, dir: Path, profile=False, record_cuda=False, profile_activities=None, cuda_max_entries=100000):
-        self.dir = dir
-        self.dir.mkdir(parents=True, exist_ok=True)
+    def __init__(self, profile=False, record_cuda=False, profile_activities=None, cuda_max_entries=100000, log_dir: Path | None = None):
+        self.log_dir = log_dir or get_run_dir()
+        self.log_dir.mkdir(parents=True, exist_ok=True)
 
         self.record_cuda = record_cuda
         self.cuda_max_entries = cuda_max_entries
@@ -34,12 +36,12 @@ class DebugTool:
         self.prof_context.__exit__(exc_type, exc_val, exc_tb)
 
         if self.profile:
-            trace_path = self.dir / "trace.json"
+            trace_path = self.log_dir / "trace.json"
             self.prof_context.export_chrome_trace(str(trace_path))
             logger.info(f"Trace exported to {trace_path}")
 
         if self.record_cuda and torch.cuda.is_available():
-            mem_path = self.dir / "cuda_snapshot.pickle"
+            mem_path = self.log_dir / "cuda_snapshot.pickle"
             try:
                 torch.cuda.memory._dump_snapshot(str(mem_path))
                 torch.cuda.memory._record_memory_history(enabled=None)
