@@ -7,6 +7,21 @@ import torch
 from mhpy.utils.common import get_run_dir
 
 
+def launch_debugger(ui: bool = True) -> None:
+    try:
+        if ui:
+            import pudb as debugger
+
+            logger.info("Using PuDB (Visual Debugger)")
+        else:
+            raise ImportError
+    except ImportError:
+        import pdb as debugger
+
+        logger.info("Using PDB (Standard Debugger) - PuDB not installed")
+    debugger.post_mortem()
+
+
 class DebugTool:
     def __init__(self, profile=False, record_cuda=False, profile_activities=None, cuda_max_entries=100000, log_dir: Path | None = None):
         self.log_dir = log_dir or get_run_dir()
