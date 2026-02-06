@@ -1,5 +1,6 @@
 from contextlib import nullcontext
 from pathlib import Path
+import sys
 
 from loguru import logger
 import torch
@@ -18,8 +19,12 @@ def launch_debugger(ui: bool = True) -> None:
     except ImportError:
         import pdb as debugger
 
-        logger.info("Using PDB (Standard Debugger) - PuDB not installed")
-    debugger.post_mortem()
+        logger.info("Using PDB (Standard Debugger)")
+
+    if sys.exc_info()[2]:
+        debugger.post_mortem()
+    else:
+        debugger.set_trace()
 
 
 class DebugTool:
